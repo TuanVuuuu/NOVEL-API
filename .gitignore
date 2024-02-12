@@ -6,3 +6,4 @@ yarn-error.log*
 .cache
 try.js
 readme.md
+.env

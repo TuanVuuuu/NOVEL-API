@@ -16,7 +16,7 @@ dotenv.config();
 (async () => {
   const browser = await puppeteer.launch();
   const page = await browser.newPage();
-  await page.goto(process.env.BASE_URL + '/');
+  await page.goto('https://truyenfull.vn' + '/');
 
   const title = await page.title();
   console.log(`Page title: ${title}`);

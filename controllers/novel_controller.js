@@ -149,6 +149,35 @@ const novelController = {
             console.error(error);
             res.status(500).json({ error: "Internal Server Error: " + error.name });
         }
+    },
+    getChapterContent: async (req, res) => {
+        try {
+            const browser = await puppeteer.launch({ headless: true }); // Mở trình duyệt ở chế độ ẩn
+            const page = await browser.newPage();
+            await page.goto(BASE_URL + '/' + req.params.novel + '/chuong-' + req.params.chapter);
+            const novelInfo = await page.evaluate(() => {
+                const chapterTextElement = document.querySelector('#chapter-c');
+                let chapterTextLines = [];
+
+                if (chapterTextElement) {
+                    const chapterText = chapterTextElement.innerHTML.trim();
+                    const div = document.createElement('div');
+                    div.innerHTML = chapterText;
+                    // Chia các dòng bởi thẻ <br>
+                    chapterTextLines = chapterText.split('<br>');
+                    // Loại bỏ các phần tử có chứa đoạn văn bản <div>
+                    chapterTextLines = chapterTextLines.filter(line => !line.includes('<div'));
+                }
+                return {
+                    chapterText: chapterTextLines
+                };
+            });
+            await browser.close();
+            res.status(200).json(novelInfo);
+        } catch (error) {
+            console.error(error);
+            res.status(500).json({ error: "Internal Server Error" });
+        }
     }
 }
 

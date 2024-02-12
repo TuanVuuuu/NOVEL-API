@@ -11,4 +11,7 @@ router.get('/:novel', novelController.getNovelDetail)
 // GET NOVEL CHAPTERS
 router.get("/:novel/page-:page", novelController.getNovelChapters);
 
+// GET CHAPTER CONTENT
+router.get("/:novel/chuong-:chapter", novelController.getChapterContent);
+
 module.exports = router

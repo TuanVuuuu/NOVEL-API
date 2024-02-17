@@ -1,9 +1,9 @@
 const puppeteer = require('puppeteer');
 require('dotenv').config();
 
-const LOCAL_HOST = process.env.LOCAL_HOST
-const BASE_URL_NEW_NOVEL = process.env.BASE_URL_NEW_NOVEL
-const BASE_URL = process.env.BASE_URL
+const LOCAL_HOST = 'http://localhost:8000'
+const BASE_URL_NEW_NOVEL = 'https://metruyencv.com/truyen?sort_by=new_chap_at&props=1'
+const BASE_URL = 'https://metruyencv.com'
 
 const novelController = {
     // GET LIST NOVEL

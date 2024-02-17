@@ -10,8 +10,8 @@ const novelController = {
     getListNovel: async (req, res) => {
         try {
 
-            // Thêm HTTP cache-control header
-            res.setHeader('Cache-Control', 'public, max-age=3600'); // Cache trong 1 giờ
+            // // Thêm HTTP cache-control header
+            // res.setHeader('Cache-Control', 'public, max-age=3600'); // Cache trong 1 giờ
 
             const url = BASE_URL_NEW_NOVEL + '/';
             const browser = await puppeteer.launch({
@@ -98,8 +98,8 @@ const novelController = {
     getNovelInfo: async (req, res) => {
         try {
 
-            // Thêm HTTP cache-control header
-            res.setHeader('Cache-Control', 'public, max-age=3600'); // Cache trong 1 giờ
+            // // Thêm HTTP cache-control header
+            // res.setHeader('Cache-Control', 'public, max-age=3600'); // Cache trong 1 giờ
 
 
             const browser = await puppeteer.launch({ headless: false }); // Mở trình duyệt ở chế độ ẩn

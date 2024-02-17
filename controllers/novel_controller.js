@@ -1,56 +1,87 @@
 const puppeteer = require('puppeteer');
+require('dotenv').config();
 
-const SERVER_URL = 'https://novel-api-mo19.onrender.com';
-const BASE_URL = 'https://truyenfull.vn';
+const LOCAL_HOST = process.env.LOCAL_HOST
+const BASE_URL_NEW_NOVEL = process.env.BASE_URL_NEW_NOVEL
+const BASE_URL = process.env.BASE_URL
 
 const novelController = {
-    // GET LIST NEW NOVEL
-    getListNewNovel: async (req, res) => {
+    // GET LIST NOVEL
+    getListNovel: async (req, res) => {
         try {
-            const url = BASE_URL + '/danh-sach/truyen-moi/';
+            const url = BASE_URL_NEW_NOVEL + '/';
             const browser = await puppeteer.launch({
-                headless: true,
+                headless: false,
             });
             const page = await browser.newPage();
             await page.goto(url);
 
-            await autoScroll(page); // Cuộn trang xuống để tải thêm nội dung
+            // Chờ cho ít nhất một phần tử chứa danh sách chương xuất hiện trên trang web
+            await page.waitForSelector('.media-body');
 
-            const listDataTeam = await page.evaluate((baseUrl, serverUrl) => {
+            // Hàm cuộn trang để tải thêm nội dung
+            await autoScroll(page);
+
+            // Trích xuất thông tin về tiểu thuyết
+            const listDataTeam = await page.evaluate(() => {
                 const dataList = [];
-                const elements = document.querySelectorAll('.list-truyen .row');
+                const elements = document.querySelectorAll('.col-6'); // Chọn tất cả các phần tử có class là 'col-6'
 
                 elements.forEach(element => {
-                    const titleElement = element.querySelector('.truyen-title > a');
 
-                    const titleItem = titleElement ? titleElement.textContent.trim() : '';
-                    const imgElement = element.querySelector('.col-xs-3 img');
-                    const src = imgElement ? imgElement.getAttribute('src') : '';
-                    const authorElement = element.querySelector('.author');
-                    const author = authorElement ? authorElement.textContent.trim() : '';
-                    const chapterElement = element.querySelector('.col-xs-2.text-info a');
-                    const chapterText = chapterElement ? chapterElement.textContent.trim() : '';
-                    const labelElements = element.querySelectorAll('.label-title');
-                    const labelList = Array.from(labelElements).map(label => {
-                        return label.classList[1].replace('label-', ''); // Lấy class thứ hai của mỗi phần tử, đó chính là giá trị như 'new', 'hot'
-                    });
-
-                    const titleHref = titleElement ? titleElement.getAttribute('href') : '';
-
-                    if (titleItem != null && titleItem != '') {
-                        dataList.push({
-                            nameNovel: titleItem,
-                            imageUrl: src,
-                            author: author,
-                            chapterText: chapterText,
-                            labelList: labelList,
-                            href: serverUrl + '/v1' + titleHref.split(baseUrl)[1]
-                        });
+                    const titleElement = element.querySelector('.media-body');
+                    const title = titleElement ? titleElement.querySelector('a').textContent.trim() : '';
+                    // Bỏ qua vòng lặp hiện tại nếu tiêu đề là null
+                    if (!title) {
+                        return; // Sẽ bỏ qua vòng lặp hiện tại và thực thi vòng lặp tiếp theo
                     }
+
+                    const hrefElement = element.querySelector('.media.border-bottom.py-4 > a')
+                    const href = hrefElement ? '/v1' + hrefElement.getAttribute('href') : ''
+
+                    const imageElement = element.querySelectorAll('a img')
+                    const imageList = Array.from(imageElement).map(el => {
+                        return el.getAttribute('src')
+                    })
+                    const image = imageList ? imageList[0] : ''
+
+
+                    const descriptionElement = element.querySelectorAll('.text-secondary.text-overflow-2-lines.fz-14.mb-3');
+                    const description = Array.from(descriptionElement).map(el => {
+                        const descriptionLines = el.textContent.trim().split('\n'); // Tách mô tả thành các dòng
+                        // Thay thế ký tự \t bằng 5 dấu cách
+                        const cleanedLines = descriptionLines.map(line => line.replace(/\t/g, '     '));
+                        return cleanedLines;
+                    }).flat();
+                    const authorElement = element.querySelector('.truncate-140');
+                    const author = authorElement ? authorElement.textContent.trim() : '';
+
+                    const chaptersElement = element.querySelectorAll('.d-flex.align-items-center.fz-13.mr-4')[1];
+                    const chapters = chaptersElement ? chaptersElement.textContent.trim() : '';
+
+
+
+                    const genreElement = element.querySelectorAll('.d-flex.align-items-start > span')
+                    genreList = Array.from(genreElement).map(el => {
+                        return el.textContent.trim()
+                    })
+                    const genre = genreList ? genreList[0] : ''
+
+                    const storyData = {
+                        title,
+                        image,
+                        description,
+                        author,
+                        chapters,
+                        genre,
+                        href
+                    };
+
+                    dataList.push(storyData);
                 });
 
                 return dataList;
-            }, BASE_URL, SERVER_URL);
+            });
 
             await browser.close();
             res.status(200).json(listDataTeam);
@@ -60,87 +91,126 @@ const novelController = {
         }
     },
 
-    // GET NOVEL CHAPTERS
-    getNovelChapters: async (req, res) => {
+    // GET NOVEL INFO
+    getNovelInfo: async (req, res) => {
         try {
-            const browser = await puppeteer.launch({ headless: true }); // Mở trình duyệt ở chế độ ẩn
+            const browser = await puppeteer.launch({ headless: false }); // Mở trình duyệt ở chế độ ẩn
             const page = await browser.newPage();
-            await page.goto(BASE_URL + '/' + req.params.novel + '/trang-' + req.params.page + '/#list-chapter');
-            const novelInfo = await page.evaluate((baseUrl, serverUrl) => {
-                const chapters = Array.from(document.querySelectorAll('.list-chapter li')).map(li => {
-                    const linkElement = li.querySelector('a');
-                    const chapterUrl = linkElement.getAttribute('href');
-                    return {
-                        title: linkElement.textContent.trim(),
-                        url: serverUrl + '/v1' + chapterUrl.split(baseUrl)[1]
-                    };
-                });
-                return {
-                    chapters: chapters
-                };
-            }, BASE_URL, SERVER_URL);
+            await page.goto(BASE_URL + '/truyen/' + req.params.name + '/');
 
-            await browser.close();
-            res.status(200).json(novelInfo);
-        } catch (error) {
-            console.error(error);
-            res.status(500).json({ error: error.name });
-        }
-    },
-    // GET NOVEL DETAIL
-    getNovelDetail: async (req, res) => {
-        try {
-            const browser = await puppeteer.launch({ headless: true }); // Mở trình duyệt ở chế độ ẩn
-            const page = await browser.newPage();
-            await page.goto(BASE_URL + '/' + req.params.novel + '/');
+            const title = (await page.title()).replace(' Convert', '');
 
-            const novelInfo = await page.evaluate((baseUrl, serverUrl) => {
-                const infoElement = document.querySelector('.info');
-                const authorElementText = Array.from(infoElement.querySelectorAll('h3')).find(el => el.textContent.trim() === 'Tác giả:');
-                const authorElement = authorElementText ? authorElementText.nextElementSibling : null
-                const sourceElementText = Array.from(infoElement.querySelectorAll('h3')).find(el => el.textContent.trim() === 'Nguồn:');
-                const sourceElement = sourceElementText ? sourceElementText.nextElementSibling : null
-                const statusElement = Array.from(infoElement.querySelectorAll('h3')).find(el => el.textContent.trim() === 'Trạng thái:').nextElementSibling;
+            // Chọn tab-pane chứa danh sách chương
+            const chapterTab = await page.$('#nav-tab-chap');
+            await chapterTab.click();
 
-                const author = authorElement ? authorElement.textContent.trim() : '';
-                const source = sourceElement ? sourceElement.textContent.trim() : '';
-                const status = statusElement ? statusElement.textContent.trim() : '';
+            // Chờ cho ít nhất một phần tử chứa danh sách chương xuất hiện trên trang web
+            await page.waitForSelector('.col-4.border-bottom-dashed');
 
-                const genres = Array.from(infoElement.querySelectorAll('a[itemprop="genre"]')).map(genre => genre.getAttribute('title'));
-                const name = Array.from(document.querySelectorAll('h3[itemprop="name"]')).map(element => element.textContent.trim())[0];
-                const ratingValue = Array.from(document.querySelectorAll('span[itemprop = "ratingValue"]')).map(element => element.textContent.trim())[0]
+            const novelInfo = await page.evaluate((title, localhost, baseUrl) => {
+                let description = '';
+                let chapterLatest = [];
+                const dataList = [];
 
-                const descriptionElement = document.querySelector('.desc-text[itemprop="description"]');
-                if (descriptionElement) {
-                    const descriptionText = descriptionElement.innerHTML.trim();
-                    description = descriptionText.split('<br>');
+                // Lấy thông tin tiêu đề, tác giả, thể loại, số chương, tình trạng, lượt xem, lượt đánh dấu, đánh giá, và số lượt đánh giá
+                const authorElement = document.querySelector('.list-unstyled.mb-4 li:first-child a');
+                const statusElement = document.querySelector('.list-unstyled.mb-4 li:nth-child(2)');
+                const genreElements = document.querySelectorAll('.list-unstyled.mb-4 li:nth-child(n+3) a');
+                const chaptersElement = document.querySelector('.list-unstyled.d-flex.mb-4 li:nth-child(1) div');
+                const chaptersPerWeekElement = document.querySelector('.list-unstyled.d-flex.mb-4 li:nth-child(2) div');
+                const viewsElement = document.querySelector('.list-unstyled.d-flex.mb-4 li:nth-child(3) div');
+                const bookmarkedElement = document.querySelector('.list-unstyled.d-flex.mb-4 li:nth-child(4) div');
+                const ratingValueElement = document.querySelector('.d-flex.align-items-center.mb-4 .font-weight-semibold');
+                const ratingTextElement = document.querySelector('.d-flex.align-items-center.mb-4 .d-inline-block.text-secondary');
+
+                if (!authorElement || !statusElement || genreElements.length === 0) {
+                    throw new Error("Không thể tìm thấy thông tin truyện.");
                 }
 
-                const chapters = Array.from(document.querySelectorAll('.l-chapter .l-chapters li')).map(li => {
-                    const linkElement = li.querySelector('a');
-                    const chapterNumber = linkElement.textContent.trim().match(/\d+/)[0];
-                    const chapterTitle = linkElement.getAttribute('title');
-                    const chapterUrl = linkElement.getAttribute('href');
+                const author = authorElement.textContent.trim();
+                const status = statusElement.textContent.trim();
+                const genres = Array.from(genreElements).map(element => element.textContent.trim());
+                const chapters = chaptersElement ? chaptersElement.textContent.trim() : '';
+                const chaptersPerWeek = chaptersPerWeekElement ? chaptersPerWeekElement.textContent.trim() : '';
+                const views = viewsElement ? viewsElement.textContent.trim() : '';
+                const bookmarked = bookmarkedElement ? bookmarkedElement.textContent.trim() : '';
+                const rating = ratingValueElement ? ratingValueElement.textContent.trim() : '';
+                const ratingCount = ratingTextElement ? ratingTextElement.textContent.trim().replace(/\D/g, '') : '';
 
-                    return {
-                        number: chapterNumber,
-                        title: chapterTitle,
-                        url: serverUrl + '/v1' + chapterUrl.split(baseUrl)[1]
-                    };
-                });
+                // Lấy thông tin mô tả
+                const descriptionElement = document.querySelector('.content');
+                if (descriptionElement) {
+                    const descriptionText = descriptionElement.innerHTML.trim();
+                    const descriptionWithoutPTag = descriptionText.replace(/<\/?p>/g, ''); // Xoá tất cả thẻ <p> và </p>
+                    description = descriptionWithoutPTag.split('<br>');
+                }
 
-                return {
+                // Lấy thông tin chương mới nhất
+                const chapterElement = document.querySelector('.list-unstyled.m-0 li.media');
+                if (chapterElement) {
+                    const linkElement = chapterElement.querySelector('a');
+                    const timeElement = chapterElement.querySelector('div.pl-3');
 
-                    name: name,
-                    author: author,
-                    genres: genres,
-                    source: source,
-                    status: status,
-                    ratingValue: ratingValue,
-                    description: description,
-                    chapters: chapters
+                    if (linkElement) {
+                        const chapterTitle = linkElement.textContent.trim();
+                        const chapterLink = localhost + linkElement.getAttribute('href').replace(baseUrl + '/truyen', '/v1');
+                        const chapterTime = timeElement ? timeElement.textContent.trim() : '';
+
+                        chapterLatest.push({
+                            chapterTitle,
+                            chapterLink,
+                            chapterTime
+                        });
+                    }
+                }
+
+                // Lấy danh sách chương
+                const chapterListElement = document.getElementById('chapter-list');
+                const chapterList = [];
+
+                if (chapterListElement) {
+                    const chapterItems = chapterListElement.querySelectorAll('.col-4.border-bottom-dashed');
+
+                    chapterItems.forEach(item => {
+                        const linkElement = item.querySelector('a');
+                        const titleElement = item.querySelector('.text-overflow-1-lines');
+                        const timeElement = item.querySelector('small.text-muted');
+
+                        if (linkElement && titleElement) {
+                            const chapterTitle = titleElement.textContent.trim();
+                            const chapterLink = localhost + '/v1/' + linkElement.getAttribute('href');
+                            const chapterTime = timeElement ? timeElement.textContent.trim() : '';
+
+                            chapterList.push({
+                                chapterTitle,
+                                chapterLink,
+                                chapterTime
+                            });
+                        }
+                    });
+                }
+
+                const storyData = {
+                    title,
+                    author,
+                    status,
+                    genres,
+                    chapters,
+                    chaptersPerWeek,
+                    views,
+                    bookmarked,
+                    rating,
+                    ratingCount,
+                    description,
+                    chapterLatest,
+                    chapterList
                 };
-            }, BASE_URL, SERVER_URL);
+
+                dataList.push(storyData);
+
+                return dataList;
+            }, title, LOCAL_HOST, BASE_URL);
+
 
             await browser.close();
 
@@ -150,13 +220,15 @@ const novelController = {
             res.status(500).json({ error: "Internal Server Error: " + error.name });
         }
     },
+
+    //GET CHAPTER CONTENT
     getChapterContent: async (req, res) => {
         try {
             const browser = await puppeteer.launch({ headless: true }); // Mở trình duyệt ở chế độ ẩn
             const page = await browser.newPage();
-            await page.goto(BASE_URL + '/' + req.params.novel + '/chuong-' + req.params.chapter);
+            await page.goto(BASE_URL + '/truyen/' + req.params.novel + '/chuong-' + req.params.chapter);
             const novelInfo = await page.evaluate(() => {
-                const chapterTextElement = document.querySelector('#chapter-c');
+                const chapterTextElement = document.querySelector('#article');
                 let chapterTextLines = [];
 
                 if (chapterTextElement) {
@@ -168,7 +240,11 @@ const novelController = {
                     // Loại bỏ các phần tử có chứa đoạn văn bản <div>
                     chapterTextLines = chapterTextLines.filter(line => !line.includes('<div'));
                 }
+
+                const chapterTitleDocument = document.querySelector('.h1.mb-4.font-weight-normal.nh-read__title')
+                const chapterTitle = chapterTitleDocument ? chapterTitleDocument.textContent.trim() : ''
                 return {
+                    chapterTitle: chapterTitle,
                     chapterText: chapterTextLines
                 };
             });

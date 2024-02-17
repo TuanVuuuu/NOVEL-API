@@ -17,9 +17,9 @@ const novelController = {
             const browser = await puppeteer.launch({
                 headless: "new"
             });
-            // const context = await browser.createIncognitoBrowserContext();
-            // const page = await context.newPage(); // Mở ẩn danh
-            const page = await browser.newPage();
+            const context = await browser.createIncognitoBrowserContext();
+            const page = await context.newPage(); // Mở ẩn danh
+            // const page = await browser.newPage();
             await page.goto(url);
 
             // Chờ cho ít nhất một phần tử chứa danh sách chương xuất hiện trên trang web
@@ -234,7 +234,7 @@ const novelController = {
     //GET CHAPTER CONTENT
     getChapterContent: async (req, res) => {
         try {
-
+            
             const browser = await puppeteer.launch({ headless: "new" }); // Mở trình duyệt ở chế độ ẩn
             const page = await browser.newPage();
             await page.goto(BASE_URL + '/truyen/' + req.params.novel + '/chuong-' + req.params.chapter);

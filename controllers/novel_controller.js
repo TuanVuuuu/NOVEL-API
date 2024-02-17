@@ -17,7 +17,7 @@ const novelController = {
             await page.goto(url);
 
             // Chờ cho ít nhất một phần tử chứa danh sách chương xuất hiện trên trang web
-            await page.waitForSelector('.media-body');
+            await page.waitForSelector('.media-body', { timeout: 120000 });
 
             // Trích xuất thông tin về tiểu thuyết
             const listDataTeam = await page.evaluate(() => {

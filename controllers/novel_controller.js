@@ -103,8 +103,7 @@ const novelController = {
             // // Thêm HTTP cache-control header
             // res.setHeader('Cache-Control', 'public, max-age=3600'); // Cache trong 1 giờ
 
-
-            const browser = await puppeteer.launch({ headless: false }); // Mở trình duyệt ở chế độ ẩn
+            const browser = await puppeteer.launch({ headless: "new" }); // Mở trình duyệt ở chế độ ẩn
             const page = await browser.newPage();
             await page.goto(BASE_URL + '/truyen/' + req.params.name + '/');
 

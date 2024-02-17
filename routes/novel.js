@@ -5,7 +5,7 @@ const router = require("express").Router()
 // GET LIST NOVEL
 router.get("/danh-sach", novelController.getListNovel);
 
-// GET NOVEL DETAIL
+// GET NOVEL INFO
 router.get("/truyen/:name", novelController.getNovelInfo)
 
 // GET CHAPTER CONTENT

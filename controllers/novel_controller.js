@@ -111,7 +111,7 @@ const novelController = {
 
             // Chọn tab-pane chứa danh sách chương
             const chapterTab = await page.$('#nav-tab-chap');
-            await chapterTab.click();
+            if (chapterTab) await chapterTab.click();
 
             // Chờ cho ít nhất một phần tử chứa danh sách chương xuất hiện trên trang web
             await page.waitForSelector('.col-4.border-bottom-dashed');
@@ -233,7 +233,7 @@ const novelController = {
     //GET CHAPTER CONTENT
     getChapterContent: async (req, res) => {
         try {
-            
+
             const browser = await puppeteer.launch({ headless: "new" }); // Mở trình duyệt ở chế độ ẩn
             const page = await browser.newPage();
             await page.goto(BASE_URL + '/truyen/' + req.params.novel + '/chuong-' + req.params.chapter);

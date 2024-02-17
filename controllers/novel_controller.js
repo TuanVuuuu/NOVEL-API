@@ -9,6 +9,10 @@ const novelController = {
     // GET LIST NOVEL
     getListNovel: async (req, res) => {
         try {
+
+            // Thêm HTTP cache-control header
+            res.setHeader('Cache-Control', 'public, max-age=3600'); // Cache trong 1 giờ
+
             const url = BASE_URL_NEW_NOVEL + '/';
             const browser = await puppeteer.launch({
                 headless: "new"
@@ -93,6 +97,11 @@ const novelController = {
     // GET NOVEL INFO
     getNovelInfo: async (req, res) => {
         try {
+
+            // Thêm HTTP cache-control header
+            res.setHeader('Cache-Control', 'public, max-age=3600'); // Cache trong 1 giờ
+
+
             const browser = await puppeteer.launch({ headless: false }); // Mở trình duyệt ở chế độ ẩn
             const page = await browser.newPage();
             await page.goto(BASE_URL + '/truyen/' + req.params.name + '/');
@@ -223,6 +232,10 @@ const novelController = {
     //GET CHAPTER CONTENT
     getChapterContent: async (req, res) => {
         try {
+
+            // Thêm HTTP cache-control header
+            res.setHeader('Cache-Control', 'public, max-age=3600'); // Cache trong 1 giờ
+
             const browser = await puppeteer.launch({ headless: true }); // Mở trình duyệt ở chế độ ẩn
             const page = await browser.newPage();
             await page.goto(BASE_URL + '/truyen/' + req.params.novel + '/chuong-' + req.params.chapter);

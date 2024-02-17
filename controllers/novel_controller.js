@@ -11,15 +11,15 @@ const novelController = {
         try {
             const url = BASE_URL_NEW_NOVEL + '/';
             const browser = await puppeteer.launch({
-                headless: true,
+                headless: "new"
             });
             const page = await browser.newPage();
             await page.goto(url);
 
             // Chờ cho ít nhất một phần tử chứa danh sách chương xuất hiện trên trang web
-            await page.waitForSelector('.media-body', { timeout: 120000 });
+            await page.waitForSelector('.media-body', { timeout: 320000 });
 
-            await autoScroll(page)
+            // await autoScroll(page)
 
             // Trích xuất thông tin về tiểu thuyết
             const listDataTeam = await page.evaluate(() => {

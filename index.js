@@ -23,7 +23,9 @@ dotenv.config();
   await browser.close();
 })();
 
-app.get("/v1", async (req, res) => {
+
+// GET START
+app.get("/", async (req, res) => {
   try {
     const title = 'Server is running...'
     res.status(200).json({ title });

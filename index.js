@@ -20,9 +20,18 @@ dotenv.config();
 
   const title = await page.title();
   console.log(`Page title: ${title}`);
-
   await browser.close();
 })();
+
+app.get("/v1", async (req, res) => {
+  try {
+    const title = 'Server is running...'
+    res.status(200).json({ title });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
 
 //ROUTES
 app.use("/v1", novelRouter)

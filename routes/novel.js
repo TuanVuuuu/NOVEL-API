@@ -2,8 +2,8 @@ const novelController = require("../controllers/novel_controller");
 
 const router = require("express").Router()
 
-// GET LIST NOVEL
-router.get("/danh-sach", novelController.getListNovel);
+// GET LIST RECOMMEND NOVEL
+router.get("/de-cu/danh-sach", novelController.getListRecommendNovel);
 
 // GET NOVEL INFO
 router.get("/truyen/:name", novelController.getNovelInfo)

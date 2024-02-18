@@ -6,8 +6,8 @@ const BASE_URL_NEW_NOVEL = 'https://metruyencv.com/truyen?sort_by=new_chap_at&pr
 const BASE_URL = 'https://metruyencv.com'
 
 const novelController = {
-    // GET LIST NOVEL
-    getListNovel: async (req, res) => {
+    // GET LIST RECOMMEND NOVEL
+    getListRecommendNovel: async (req, res) => {
         try {
 
             // // Thêm HTTP cache-control header

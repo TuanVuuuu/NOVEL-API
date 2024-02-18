@@ -17,9 +17,9 @@ const novelController = {
             const browser = await puppeteer.launch({
                 headless: "new"
             });
-            const context = await browser.createIncognitoBrowserContext();
-            const page = await context.newPage(); // Mở ẩn danh
-            // const page = await browser.newPage();
+            // const context = await browser.createIncognitoBrowserContext();
+            // const page = await context.newPage(); // Mở ẩn danh
+            const page = await browser.newPage();
             await page.goto(url);
 
             // Chờ cho ít nhất một phần tử chứa danh sách chương xuất hiện trên trang web

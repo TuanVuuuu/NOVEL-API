@@ -180,7 +180,7 @@ const novelController = {
                 if (chapterListElement) {
                     const chapterItems = chapterListElement.querySelectorAll('.col-4.border-bottom-dashed');
 
-                    chapterItems.forEach(item => {
+                    chapterItems.forEach((item, index) => {
                         const linkElement = item.querySelector('a');
                         const titleElement = item.querySelector('.text-overflow-1-lines');
                         const timeElement = item.querySelector('small.text-muted');
@@ -191,6 +191,7 @@ const novelController = {
                             const chapterTime = timeElement ? timeElement.textContent.trim() : '';
 
                             chapterList.push({
+                                index: index,
                                 chapterTitle,
                                 chapterLink,
                                 chapterTime

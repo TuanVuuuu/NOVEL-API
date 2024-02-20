@@ -20,10 +20,10 @@ const mongodbController = {
                 res.status(404).json({
                     status: 404, 
                     message: 'Not Found'
-                })
+                });
             } else {
                 console.log('Novel length: ' + novels.length)
-                res.status(200).json(novels)
+                res.status(200).json(novels);
             }
     
             

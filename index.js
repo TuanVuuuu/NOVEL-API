@@ -15,7 +15,7 @@ app.use(morgan("common"));
 dotenv.config();
 
 //CONNECT DATABASE
-mongoose.connect(process.env.MONGODB_URL)
+mongoose.connect('mongodb+srv://adminaza:vJZwvUV70FUcWy8H@clusternovel.p7rn125.mongodb.net/?retryWrites=true&w=majority')
   .then(() => {
     console.log("Connected to MongoDB: ");
   })

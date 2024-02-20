@@ -1,4 +1,6 @@
 const novelController = require("../controllers/novel_controller");
+const chapterController = require("../controllers/chapter_controller");
+const mongodbController = require("../controllers/mongodb_controller");
 
 const router = require("express").Router()
 
@@ -9,6 +11,13 @@ router.get("/de-cu/danh-sach", novelController.getListRecommendNovel);
 router.get("/truyen/:name", novelController.getNovelInfo)
 
 // GET CHAPTER CONTENT
-router.get("/:novel/chuong-:chapter", novelController.getChapterContent);
+router.get("/:novel/chuong-:chapter", chapterController.getChapterContent);
+
+
+
+///MONGODB
+
+// GET LIST NOVEL RECOMMEND FROM MONGODB
+router.get("/novel/de-cu/danh-sach/page-:page", mongodbController.getNovelListRecommentFromMongoDB);
 
 module.exports = router

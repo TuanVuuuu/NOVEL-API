@@ -1,8 +1,9 @@
 const puppeteer = require('puppeteer');
+const NovelListRecommend = require('../model/novel_list_recommend');
 require('dotenv').config();
 
 const LOCAL_HOST = 'http://localhost:8000'
-const BASE_URL_NEW_NOVEL = 'https://metruyencv.com/truyen?sort_by=new_chap_at&props=1'
+const BASE_URL_NOVEL_RECOMMEND = 'https://metruyencv.com/truyen?sort_by=new_chap_at&props=1'
 const BASE_URL = 'https://metruyencv.com'
 
 const novelController = {
@@ -13,7 +14,7 @@ const novelController = {
             // // Thêm HTTP cache-control header
             // res.setHeader('Cache-Control', 'public, max-age=3600'); // Cache trong 1 giờ
 
-            const url = BASE_URL_NEW_NOVEL + '/';
+            const url = BASE_URL_NOVEL_RECOMMEND + '/';
             const browser = await puppeteer.launch({
                 headless: "new"
             });
@@ -79,7 +80,8 @@ const novelController = {
                         author,
                         chapters,
                         genre,
-                        href
+                        href,
+                        updatedAt: new Date()
                     };
 
                     dataList.push(storyData);
@@ -89,12 +91,29 @@ const novelController = {
             });
 
             await browser.close();
+
+            // Kiểm tra và thêm dữ liệu vào MongoDB
+            for (const novel of listDataTeam) {
+                const existingNovel = await NovelListRecommend.findOne({ href: novel.href, chapters: novel.chapters });
+                if (!existingNovel) {
+                    novel.updatedAt = new Date();
+                    await NovelListRecommend.create(novel);
+                    console.log('Create ' + novel.title + ' Create at: ' + novel.updatedAt)
+                } else if (existingNovel.chapters !== novel.chapters) {
+                    novel.updatedAt = new Date();
+                    await NovelListRecommend.updateOne({ href: novel.href }, { $set: { chapters: novel.chapters } });   
+                    console.log('Update ' + novel.title + ' Update at: ' + novel.updatedAt)
+                }
+            }
+
             res.status(200).json(listDataTeam);
         } catch (error) {
             console.error(error);
             res.status(500).json({ error: "Internal Server Error:" + error.name });
         }
     },
+
+
 
     // GET NOVEL INFO
     getNovelInfo: async (req, res) => {
@@ -230,44 +249,6 @@ const novelController = {
             res.status(500).json({ error: "Internal Server Error: " + error.name });
         }
     },
-
-    //GET CHAPTER CONTENT
-    getChapterContent: async (req, res) => {
-        try {
-
-            const browser = await puppeteer.launch({ headless: "new" }); // Mở trình duyệt ở chế độ ẩn
-            const page = await browser.newPage();
-            await page.goto(BASE_URL + '/truyen/' + req.params.novel + '/chuong-' + req.params.chapter);
-
-            await page.waitForSelector('#article', { timeout: 320000 });
-            const novelInfo = await page.evaluate(() => {
-                const chapterTextElement = document.querySelector('#article');
-                let chapterTextLines = [];
-
-                if (chapterTextElement) {
-                    const chapterText = chapterTextElement.innerHTML.trim();
-                    const div = document.createElement('div');
-                    div.innerHTML = chapterText;
-                    // Chia các dòng bởi thẻ <br>
-                    chapterTextLines = chapterText.split('<br>');
-                    // Loại bỏ các phần tử có chứa đoạn văn bản <div>
-                    chapterTextLines = chapterTextLines.filter(line => !line.includes('<div'));
-                }
-
-                const chapterTitleDocument = document.querySelector('.h1.mb-4.font-weight-normal.nh-read__title')
-                const chapterTitle = chapterTitleDocument ? chapterTitleDocument.textContent.trim() : ''
-                return {
-                    chapterTitle: chapterTitle,
-                    chapterText: chapterTextLines
-                };
-            });
-            await browser.close();
-            res.status(200).json(novelInfo);
-        } catch (error) {
-            console.error(error);
-            res.status(500).json({ error: "Internal Server Error" });
-        }
-    }
 }
 
 async function autoScroll(page) {
@@ -288,5 +269,15 @@ async function autoScroll(page) {
         });
     });
 }
+
+// const removeAllNovels = async () => {
+//     try {
+//         await NovelListRecommend.deleteMany({});
+//         console.log("All novels have been removed from the database.");
+//     } catch (error) {
+//         console.error("Error while removing novels:", error);
+//     }
+// };
+
 
 module.exports = novelController;

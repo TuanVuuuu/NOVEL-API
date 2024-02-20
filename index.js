@@ -5,6 +5,7 @@ const bodyParser = require('body-parser');
 const dotenv = require('dotenv');
 const morgan = require("morgan");
 const novelRouter = require("./routes/novel")
+const mongoose = require("mongoose");
 
 const app = express();
 app.use(bodyParser.json({ limit: "50mb" }));
@@ -13,6 +14,16 @@ app.use(cors());
 app.use(morgan("common"));
 dotenv.config();
 
+//CONNECT DATABASE
+mongoose.connect(process.env.MONGODB_URL)
+  .then(() => {
+    console.log("Connected to MongoDB: ");
+  })
+  .catch((error) => {
+    console.error("Error connecting to MongoDB:", error);
+  });
+
+// GET TITLE WEBSITE
 (async () => {
   const browser = await puppeteer.launch();
   const page = await browser.newPage();

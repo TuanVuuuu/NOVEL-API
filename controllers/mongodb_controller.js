@@ -45,7 +45,7 @@ const mongodbController = {
             if (!novel) {
                 await novelController.getNovelInfo(req, res);
             } else {
-                res.status(200).json(novel);
+                res.status(200).json([novel]);
             }
         } catch (error) {
             console.error(error);

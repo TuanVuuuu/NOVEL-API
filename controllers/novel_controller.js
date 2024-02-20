@@ -1,5 +1,6 @@
 const puppeteer = require('puppeteer');
 const NovelListRecommend = require('../model/novel_list_recommend');
+const NovelDetail = require('../model/novel_detail_model')
 require('dotenv').config();
 
 const LOCAL_HOST = 'http://localhost:8000'
@@ -101,7 +102,7 @@ const novelController = {
                     console.log('Create ' + novel.title + ' Create at: ' + novel.updatedAt)
                 } else if (existingNovel.chapters !== novel.chapters) {
                     novel.updatedAt = new Date();
-                    await NovelListRecommend.updateOne({ href: novel.href }, { $set: { chapters: novel.chapters } });   
+                    await NovelListRecommend.updateOne({ href: novel.href }, { $set: { chapters: novel.chapters } });
                     console.log('Update ' + novel.title + ' Update at: ' + novel.updatedAt)
                 }
             }
@@ -118,6 +119,8 @@ const novelController = {
     // GET NOVEL INFO
     getNovelInfo: async (req, res) => {
         try {
+            console.log('API: getNovelInfo')
+            console.log('params: ' + req)
 
             // // Thêm HTTP cache-control header
             // res.setHeader('Cache-Control', 'public, max-age=3600'); // Cache trong 1 giờ
@@ -135,7 +138,7 @@ const novelController = {
             // Chờ cho ít nhất một phần tử chứa danh sách chương xuất hiện trên trang web
             await page.waitForSelector('.col-4.border-bottom-dashed');
 
-            const novelInfo = await page.evaluate((title, localhost, baseUrl) => {
+            const novelInfo = await page.evaluate((title, localhost, baseUrl, params) => {
                 let description = '';
                 let chapterLatest = [];
                 const dataList = [];
@@ -232,16 +235,33 @@ const novelController = {
                     ratingCount,
                     description,
                     chapterLatest,
-                    chapterList
+                    chapterList,
+                    href: params.name,
                 };
 
                 dataList.push(storyData);
 
                 return dataList;
-            }, title, LOCAL_HOST, BASE_URL);
+            }, title, LOCAL_HOST, BASE_URL, req.params);
 
 
             await browser.close();
+
+            //MONGO DATABASE
+
+            // Kiểm tra tiểu thuyết đã tồn tại trong cơ sở dữ liệu hay chưa
+            const existingNovel = await NovelDetail.findOne({ href: novelInfo[0].href });
+
+            if (existingNovel) {
+                // Nếu tiểu thuyết đã tồn tại, cập nhật lại dữ liệu
+                await NovelDetail.findOneAndUpdate({ href: novelInfo[0].href }, novelInfo[0]);
+                console.log('Novel detail updated successfully.');
+            } else {
+                // Nếu tiểu thuyết chưa tồn tại, thêm mới dữ liệu
+                const newNovelDetail = new NovelDetail(novelInfo[0]);
+                await newNovelDetail.save();
+                console.log('Novel detail added successfully.');
+            }
 
             res.status(200).json(novelInfo);
         } catch (error) {
@@ -269,15 +289,5 @@ async function autoScroll(page) {
         });
     });
 }
-
-// const removeAllNovels = async () => {
-//     try {
-//         await NovelListRecommend.deleteMany({});
-//         console.log("All novels have been removed from the database.");
-//     } catch (error) {
-//         console.error("Error while removing novels:", error);
-//     }
-// };
-
 
 module.exports = novelController;

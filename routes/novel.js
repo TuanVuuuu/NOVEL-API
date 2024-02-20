@@ -20,4 +20,7 @@ router.get("/:novel/chuong-:chapter", chapterController.getChapterContent);
 // GET LIST NOVEL RECOMMEND FROM MONGODB
 router.get("/novel/de-cu/danh-sach/page-:page", mongodbController.getNovelListRecommentFromMongoDB);
 
+// GET NOVEL INFO FROM MONGODB
+router.get("/novel/:name", mongodbController.getNovelInfoFromMongoDB);
+
 module.exports = router

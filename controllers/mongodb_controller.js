@@ -72,7 +72,7 @@ const mongodbController = {
                 await chapterController.getChapterContent(req, res);
             } else {
                 // Nếu tìm thấy, trả về thông tin tiểu thuyết
-                res.status(200).json([novel]);
+                res.status(200).json(novel);
             }
         } catch (error) {
             console.error(error);

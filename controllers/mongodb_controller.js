@@ -16,6 +16,7 @@ const mongodbController = {
             const perPage = 20;
             console.log('API : getNovelListRecommentFromMongoDB')
             const novels = await NovelListRecommend.find({})
+                .sort({ updatedAt: -1 }) // Sắp xếp theo thời gian cập nhật mới nhất
                 .skip((req.page - 1) * perPage)
                 .limit(perPage);
 
@@ -43,6 +44,7 @@ const mongodbController = {
             console.log('params: ' + req.params.name)
             const novel = await NovelDetail.findOne({ href: req.params.name });
             if (!novel) {
+                console.log('Novel ' + req.params.name + ' not found')
                 await novelController.getNovelInfo(req, res);
             } else {
                 res.status(200).json([novel]);

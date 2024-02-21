@@ -120,7 +120,6 @@ const novelController = {
     getNovelInfo: async (req, res) => {
         try {
             console.log('API: getNovelInfo')
-            console.log('params: ' + req)
 
             // // Thêm HTTP cache-control header
             // res.setHeader('Cache-Control', 'public, max-age=3600'); // Cache trong 1 giờ

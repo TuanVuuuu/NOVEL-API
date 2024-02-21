@@ -46,13 +46,13 @@ const chapterController = {
 
             if (existingChapter) {
                 // Nếu đã tồn tại, trả về nội dung của chương đã tồn tại
-                console.log("Chapter already exists in MongoDB:", existingChapter);
+                console.log("Chapter already exists in MongoDB:", novelInfo.chapterTitle);
                 return res.status(200).json(existingChapter);
             } else {
                 // Nếu chưa tồn tại, thêm mới vào MongoDB
                 const newChapterDetail = new ChapterDetail(novelInfo);
                 await newChapterDetail.save();
-                console.log("Data added to MongoDB:", newChapterDetail);
+                console.log("Data added to MongoDB:", novelInfo.chapterTitle);
                 return res.status(200).json(novelInfo);
             }
         } catch (error) {

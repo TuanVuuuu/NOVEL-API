@@ -39,8 +39,10 @@ const mongodbController = {
         }
     },
 
+
+
     // GET NOVEL INFO FROM MONGODB
-    getChapterContentFromMongoDB: async (req, res) => {
+    getNovelInfoFromMongoDB: async (req, res) => {
         try {
             console.log('API : getNovelInfoFromMongoDB')
             console.log('params: ' + req.params.name)
@@ -58,7 +60,7 @@ const mongodbController = {
     },
 
     // Lấy thông tin của một tiểu thuyết từ MongoDB dựa trên slug của tiểu thuyết
-    getNovelInfoFromMongoDB: async (req, res) => {
+    getChapterContentFromMongoDB: async (req, res) => {
         try {
             console.log('API : getNovelInfoFromMongoDB')
             console.log('params: ' + req.params.novel + ' chapter ' + req.params.chapter)

@@ -40,7 +40,7 @@ const mongodbController = {
     },
 
     // GET NOVEL INFO FROM MONGODB
-    getNovelInfoFromMongoDB: async (req, res) => {
+    getChapterContentFromMongoDB: async (req, res) => {
         try {
             console.log('API : getNovelInfoFromMongoDB')
             console.log('params: ' + req.params.name)

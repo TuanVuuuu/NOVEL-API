@@ -103,7 +103,7 @@ const novelController = {
                     novel.updatedAt = new Date();
                     await NovelListRecommend.create(novel);
                     console.log('Create ' + novel.title + ' Create at: ' + novel.updatedAt)
-                    await getNovelInfoInternal(novel);
+                    // await getNovelInfoInternal(novel);
                 } else if (existingNovel.chapters !== novel.chapters) {
                     novel.updatedAt = new Date();
                     await NovelListRecommend.updateOne({ href: novel.href }, { $set: { chapters: novel.chapters } });

@@ -79,7 +79,7 @@ const mongodbController = {
 
     searchByTitle: async (req, res) => {
         try {
-            const perPage = 20;
+            const perPage = 50;
             console.log('API : searchByTitle');
             // Tìm kiếm dựa trên title, không phân biệt hoa thường
             const searchText = req.params.title;

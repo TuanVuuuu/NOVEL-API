@@ -7,10 +7,6 @@ const { ChapterDetail } = require('../model/chapter_detail_model');
 const chapterController = require('./chapter_controller');
 require('dotenv').config();
 
-const LOCAL_HOST = 'http://localhost:8000'
-const BASE_URL_NOVEL_RECOMMEND = 'https://metruyencv.com/truyen?sort_by=new_chap_at&props=1'
-const BASE_URL = 'https://metruyencv.com'
-
 const mongodbController = {
     // GET LIST RECOMMEND NOVEL FROM MONGODB
     getNovelListRecommentFromMongoDB: async (req, res) => {
@@ -78,7 +74,38 @@ const mongodbController = {
             console.error(error);
             res.status(500).json({ error: "Internal Server Error: " + error.name });
         }
+    },
+
+
+    searchByTitle: async (req, res) => {
+        try {
+            const perPage = 20;
+            console.log('API : searchByTitle');
+            // Tìm kiếm dựa trên title, không phân biệt hoa thường
+            const searchText = req.params.title;
+
+            // Sử dụng text search để tìm kiếm văn bản không cần khớp hoàn toàn
+            const novels = await NovelListRecommend.find({ $text: { $search: searchText } })
+                .sort({ updatedAt: -1 }) // Sắp xếp theo thời gian cập nhật mới nhất
+                .skip((req.params.page - 1) * perPage)
+                .limit(perPage);
+
+            if (novels.length === 0) {
+                res.status(404).json({
+                    status: 404,
+                    message: 'Not Found'
+                });
+            } else {
+                console.log('Novel length: ' + novels.length);
+                res.status(200).json(novels);
+            }
+        } catch (error) {
+            console.error(error);
+            res.status(500).json({ error: "Internal Server Error: " + error.name });
+        }
     }
+
+
 
 }
 

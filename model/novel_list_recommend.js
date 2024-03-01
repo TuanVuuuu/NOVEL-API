@@ -11,6 +11,8 @@ const novelSchema = new mongoose.Schema({
     updatedAt: { type: Date, default: Date.now } 
 });
 
+novelSchema.index({ title: 'text' });
+
 const NovelListRecommend = mongoose.model("NovelListRecommend", novelSchema);
 
 module.exports = NovelListRecommend;

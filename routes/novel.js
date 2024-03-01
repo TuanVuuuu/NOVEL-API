@@ -26,4 +26,7 @@ router.get("/novel/:name", mongodbController.getNovelInfoFromMongoDB);
 // GET CHAPTER CONTENT
 router.get("/novel/:novel/chuong-:chapter", mongodbController.getChapterContentFromMongoDB);
 
+// GET LISTT NOVEL BY TITLE
+router.get("/novel/search/:title/page-:page", mongodbController.searchByTitle);
+
 module.exports = router

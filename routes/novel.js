@@ -7,6 +7,9 @@ const router = require("express").Router()
 // GET LIST RECOMMEND NOVEL
 router.get("/de-cu/danh-sach", novelController.getListRecommendNovel);
 
+// GET LIST RECOMMEND NOVEL
+router.get("/de-cu/danh-sach/top", novelController.getListTopNovel);
+
 // GET NOVEL INFO
 router.get("/truyen/:name", novelController.getNovelInfo)
 
@@ -16,9 +19,11 @@ router.get("/:novel/chuong-:chapter", chapterController.getChapterContent);
 
 
 ///MONGODB
-
 // GET LIST NOVEL RECOMMEND FROM MONGODB
 router.get("/novel/de-cu/danh-sach/page-:page", mongodbController.getNovelListRecommentFromMongoDB);
+
+// GET LIST NOVEL top FROM MONGODB
+router.get("/novel/de-cu/danh-sach/top/page-:page", mongodbController.getNovelListTopFromMongoDB);
 
 // GET NOVEL INFO FROM MONGODB
 router.get("/novel/:name", mongodbController.getNovelInfoFromMongoDB);

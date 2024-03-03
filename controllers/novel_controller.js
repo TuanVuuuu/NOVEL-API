@@ -2,10 +2,12 @@ const puppeteer = require('puppeteer');
 const NovelListRecommend = require('../model/novel_list_recommend');
 const NovelDetail = require('../model/novel_detail_model');
 const { ChapterDetail } = require('../model/chapter_detail_model');
+const NovelListTop = require('../model/novel_list_top');
 require('dotenv').config();
 
 const LOCAL_HOST = 'http://localhost:8000'
 const BASE_URL_NOVEL_RECOMMEND = 'https://metruyencv.com/truyen?sort_by=new_chap_at&props=1'
+const BASE_URL_NOVEL_TOP = 'https://metruyencv.com/bang-xep-hang/tuan/thinh-hanh'
 const BASE_URL = 'https://metruyencv.com'
 
 const novelController = {
@@ -270,6 +272,117 @@ const novelController = {
         } catch (error) {
             console.error(error);
             res.status(500).json({ error: "Internal Server Error: " + error.name });
+        }
+    },
+
+    // GET LIST TOP NOVEL
+    getListTopNovel: async (req, res) => {
+        try {
+
+            console.log("API: getListTopNovel")
+
+            // // Thêm HTTP cache-control header
+            // res.setHeader('Cache-Control', 'public, max-age=3600'); // Cache trong 1 giờ
+
+            const url = BASE_URL_NOVEL_TOP + '/';
+            const browser = await puppeteer.launch({
+                headless: "new"
+            });
+            // const context = await browser.createIncognitoBrowserContext();
+            // const page = await context.newPage(); // Mở ẩn danh
+            const page = await browser.newPage();
+            await page.goto(url);
+
+            // Chờ cho ít nhất một phần tử chứa danh sách chương xuất hiện trên trang web
+            await page.waitForSelector('.list-unstyled', { timeout: 320000 });
+
+            await autoScroll(page)
+
+            // Trích xuất thông tin về tiểu thuyết
+            const listDataTeam = await page.evaluate(() => {
+                const dataList = [];
+                const elements = document.querySelectorAll('.media.py-4.border-bottom'); // Chọn tất cả các phần tử có class là 'col-6'
+
+                elements.forEach((element, index) => {
+
+                    const titleElement = element.querySelector('.media-body');
+                    const title = titleElement ? titleElement.querySelector('a').textContent.trim() : '';
+                    // Bỏ qua vòng lặp hiện tại nếu tiêu đề là null
+                    if (!title) {
+                        return; // Sẽ bỏ qua vòng lặp hiện tại và thực thi vòng lặp tiếp theo
+                    }
+
+                    const hrefElement = element.querySelector('.media.border-bottom.py-4 > a')
+                    const href = hrefElement ? '/v1' + hrefElement.getAttribute('href') : ''
+
+                    const imageElement = element.querySelectorAll('a img')
+                    const imageList = Array.from(imageElement).map(el => {
+                        return el.getAttribute('src')
+                    })
+                    const image = imageList ? imageList[0] : ''
+
+
+                    const descriptionElement = element.querySelectorAll('.text-secondary.fz-14.text-overflow-3-lines');
+                    const description = Array.from(descriptionElement).map(el => {
+                        const descriptionLines = el.textContent.trim().split('\n'); // Tách mô tả thành các dòng
+                        // Thay thế ký tự \t bằng 5 dấu cách
+                        const cleanedLines = descriptionLines.map(line => line.replace(/\t/g, '     '));
+                        return cleanedLines;
+                    }).flat();
+                    const authorElement = element.querySelector('.d-flex.align-items-center.mr-4');
+                    const author = authorElement ? authorElement.textContent.trim() : '';
+
+                    const genreNextElement = authorElement.nextElementSibling.nextElementSibling
+                    const genreElement = genreNextElement.querySelector('span')
+                    const genre = genreElement ? genreElement.textContent.trim() : '';
+
+                    const storyData = {
+                        title,
+                        image,
+                        description,
+                        author,
+                        genre,
+                        href,
+                        updatedAt: new Date(),
+                        rank: index + 1
+                    };
+
+                    dataList.push(storyData);
+                });
+
+                return dataList;
+            });
+
+            await browser.close();
+
+            // Sắp xếp toàn bộ novel trong MongoDB theo rank từ thấp đến cao
+            const allNovels = await NovelListTop.find().sort({ rank: 1 });
+
+            // Cập nhật lại rank cho tất cả các novel
+            for (let i = 0; i < allNovels.length; i++) {
+                const novelDb = allNovels[i];
+                novelDb.rank += 10;
+                await novelDb.save();
+            }
+
+            // Tiếp tục với mã để kiểm tra và thêm mới hoặc cập nhật novel
+            for (const novel of listDataTeam) {
+                const existingNovel = await NovelListTop.findOne({ href: novel.href });
+                if (!existingNovel) {
+                    novel.updatedAt = new Date();
+                    await NovelListTop.create(novel);
+                    console.log('Create ' + novel.title + ' Create at: ' + novel.updatedAt)
+                } else if (existingNovel.rank !== novel.rank) {
+                    novel.updatedAt = new Date();
+                    await NovelListTop.updateOne({ href: novel.href }, { $set: { rank: novel.rank } });
+                    console.log('Update ' + novel.title + ' Update at: ' + novel.updatedAt + 'to rank:' + novel.rank)
+                }
+            }
+
+            res.status(200).json(listDataTeam);
+        } catch (error) {
+            console.error(error);
+            res.status(500).json({ error: "Internal Server Error:" + error.name });
         }
     },
 }

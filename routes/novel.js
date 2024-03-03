@@ -1,6 +1,7 @@
 const novelController = require("../controllers/novel_controller");
 const chapterController = require("../controllers/chapter_controller");
 const mongodbController = require("../controllers/mongodb_controller");
+const autoCrawlController = require("../controllers/auto_crawl_controller");
 
 const router = require("express").Router()
 
@@ -33,5 +34,9 @@ router.get("/novel/:novel/chuong-:chapter", mongodbController.getChapterContentF
 
 // GET LISTT NOVEL BY TITLE
 router.get("/novel/search/:title/page-:page", mongodbController.searchByTitle);
+
+
+///Auto
+router.get("/de-cu", autoCrawlController.crawlNovel)
 
 module.exports = router

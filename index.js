@@ -5,6 +5,7 @@ const bodyParser = require('body-parser');
 const dotenv = require('dotenv');
 const morgan = require("morgan");
 const novelRouter = require("./routes/novel");
+const fashionRouter = require("./fashion_controller/routes");
 const connectDB = require("./config/db");
 const errorHandler = require("./middlewares/error");
 
@@ -37,6 +38,8 @@ app.get("/", async (req, res) => {
 
 //ROUTES
 app.use("/v1", novelRouter);
+
+app.use("/v2", fashionRouter)
 
 app.use(errorHandler);
 
